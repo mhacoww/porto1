@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; background: #f4f4f4; }
+        .nav { display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem 2rem; border-radius: 8px; margin-bottom: 2rem; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        form input, form textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #222; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button.delete-btn { background: #d9534f; padding: 5px 10px; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <h2>Dashboard</h2>
+        <div>
+            <span id="userEmail"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Section 1: Create New Entry -->
+    <div class="card">
+        <h3>Add New Entry</h3>
+        <form id="entryForm">
+            <input type="text" id="title" placeholder="Title" required>
+            <input type="text" id="category" placeholder="Category (e.g. News, Menu, Update)">
+            <textarea id="description" placeholder="Description" rows="3"></textarea>
+            <input type="text" id="imageUrl" placeholder="Image URL (optional)">
+            <button type="submit">Save to Database</button>
+        </form>
+    </div>
+
+    <!-- Section 2: View and Manage Entries -->
+    <div class="card">
+        <h3>Current Entries</h3>
+        <table id="entriesTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="entriesBody">
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://vukiwkaowsvlxsbmisjr.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_M0_lWHOn7NytFPK39sEgUQ_M1P0JnCL';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 1. SECURITY CHECK: Ensure user is logged in
+        async function checkUser() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) {
+                window.location.href = "login.html"; // Kick them out if not logged in
+            } else {
+                document.getElementById('userEmail').innerText = user.email + " | ";
+                loadEntries(); // If logged in, load the data
+            }
+        }
+        checkUser();
+
+        // 2. CREATE: Add new entry
+        const entryForm = document.getElementById('entryForm');
+        entryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            const image_url = document.getElementById('imageUrl').value;
+
+            const { data, error } = await _supabase
+                .from('entries')
+                .insert([{ title, category, description, image_url }]);
+
+            if (error) {
+                alert("Error saving: " + error.message);
+            } else {
+                alert("Success! Entry added.");
+                entryForm.reset();
+                loadEntries(); // Refresh the list
+            }
+        });
+
+        // 3. READ: Load entries into the table
+        async function loadEntries() {
+            const { data, error } = await _supabase
+                .from('entries')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById('entriesBody');
+            tbody.innerHTML = ''; // Clear table
+
+            data.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.title}</td>
+                        <td>${item.category}</td>
+                        <td><button class="delete-btn" onclick="deleteEntry(${item.id})">Delete</button></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // 4. DELETE: Remove entry
+        async function deleteEntry(id) {
+            if (confirm("Are you sure you want to delete this?")) {
+                const { error } = await _supabase
+                    .from('entries')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) alert(error.message);
+                else loadEntries();
+            }
+        }
+
+        // 5. LOGOUT
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

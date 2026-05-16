@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+    <title>Kopi Kuy News Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Load Supabase library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Small layout adjustments for the news cards */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+        .news-card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .news-card img { width: 100%; height: 200px; object-fit: cover; background: #eee; }
+        .news-content { padding: 15px; }
+        .news-category { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; }
+        .news-title { margin: 10px 0; font-size: 1.2rem; }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <img class="logo" src="images/logo/logo_kuy.png">
+        <div class="navigasi">
+            <a href="index.html">Berita Terbaru</a>
+            <a href="#about-us">Tentang Kami</a>
+            <a href="#contact-us">Kontak</a>
+        </div>
+        <!-- Smart Auth Button -->
+        <a href="login.html" id="authButton" style="padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 4px;">Admin Login</a>
+    </nav>
+
+    <header>
+        <div class="kiri">
+            <h1>Kopi Kuy News <img src="images/icon/icon_kopi.svg" alt=""></h1>
+            <p>Pusat informasi dan perkembangan terbaru seputar ekosistem bisnis dan teknologi kami.</p>
+        </div>
+        <div class="kanan">
+            <img src="images/header/header1.png" alt="">
+        </div>
+    </header>
+
+    <!-- Dynamic News Section -->
+    <section id="latest-news">
+        <h2 style="padding-left: 20px;">Berita Terkini</h2>
+        <div id="news-container" class="news-grid">
+            <p style="padding: 20px;">Memuat berita terbaru...</p>
+        </div>
+    </section>
+
+    <section class="about-us" id="about-us">
+        <h2>Gak News Gak Kuy!</h2>
+        <p>Portal berita ini didedikasikan untuk memberikan transparansi dan update real-time mengenai operasional perusahaan, mulai dari sektor agrikultur hingga infrastruktur IT.</p>
+        <img src="images/about-us/aset_kopi_jumbo.png" alt="">
+    </section>
+
+    <section class="contact-us" id="contact-us">
+        <div class="kontak">
+            <img src="images/icon/icon_mail.png" alt="">
+            <p>Email: hello@kopikuy.com</p>
+        </div>
+        <div class="kontak">
+            <img src="images/icon/icon_instagram.png" alt="">
+            <p>Instagram: @kopi.kuy</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 WaraNews. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // 1. Supabase Configuration
+        const SUPABASE_URL = 'https://vukiwkaowsvlxsbmisjr.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_M0_lWHOn7NytFPK39sEgUQ_M1P0JnCL';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. Fetch and Display News
+        async function fetchNews() {
+            const { data, error } = await _supabase
+                .from('entries')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('news-container');
+            
+            if (error) {
+                container.innerHTML = "<p>Gagal memuat berita.</p>";
+                return;
+            }
+
+            if (data.length === 0) {
+                container.innerHTML = "<p>Belum ada berita untuk saat ini.</p>";
+                return;
+            }
+
+            container.innerHTML = ''; // Clear loading text
+
+            data.forEach(item => {
+                const card = `
+                    <div class="news-card">
+                        <img src="${item.image_url || 'images/default-news.jpg'}" alt="${item.title}">
+                        <div class="news-content">
+                            <span class="news-category">${item.category || 'General'}</span>
+                            <h3 class="news-title">${item.title}</h3>
+                            <p>${item.description}</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // 3. Smart Auth Button Logic
+        async function checkLogin() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const authBtn = document.getElementById('authButton');
+            
+            if (user) {
+                authBtn.innerText = "Admin Dashboard";
+                authBtn.href = "admin-dashboard.html";
+                authBtn.style.background = "#28a745"; // Green for logged in
+            }
+        }
+
+        // Start everything when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNews();
+            checkLogin();
+        });
+    </script>
+</body>
+</html>
