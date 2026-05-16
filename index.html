@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
-    <title>Kopi Kuy News Portal</title>
+    <title>Wara News</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Load Supabase library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -35,7 +35,7 @@
 
     <header>
         <div class="kiri">
-            <h1>Kopi Kuy News <img src="images/icon/icon_kopi.svg" alt=""></h1>
+            <h1>Wara News <img src="images/icon/icon_kopi.svg" alt=""></h1>
             <p>Pusat informasi dan perkembangan terbaru seputar ekosistem bisnis dan teknologi kami.</p>
         </div>
         <div class="kanan">
@@ -60,11 +60,11 @@
     <section class="contact-us" id="contact-us">
         <div class="kontak">
             <img src="images/icon/icon_mail.png" alt="">
-            <p>Email: hello@kopikuy.com</p>
+            <p>Email: hello@waranews.com</p>
         </div>
         <div class="kontak">
             <img src="images/icon/icon_instagram.png" alt="">
-            <p>Instagram: @kopi.kuy</p>
+            <p>Instagram: @wara.id</p>
         </div>
     </section>
 
@@ -100,13 +100,28 @@
             container.innerHTML = ''; // Clear loading text
 
             data.forEach(item => {
+                // Optional: We can cut the description short so the cards stay the same height on the homepage
+                const shortDescription = item.description.length > 100 
+                    ? item.description.substring(0, 100) + "..." 
+                    : item.description;
+
                 const card = `
                     <div class="news-card">
                         <img src="${item.image_url || 'images/default-news.jpg'}" alt="${item.title}">
                         <div class="news-content">
                             <span class="news-category">${item.category || 'General'}</span>
-                            <h3 class="news-title">${item.title}</h3>
-                            <p>${item.description}</p>
+                            
+                            <h3 class="news-title">
+                                <a href="article.html?id=${item.id}" style="text-decoration: none; color: inherit;">
+                                    ${item.title}
+                                </a>
+                            </h3>
+                            
+                            <p>${shortDescription}</p>
+                            
+                            <a href="article.html?id=${item.id}" style="display: inline-block; margin-top: 15px; color: #333; text-decoration: none; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 2px;">
+                                Baca Selengkapnya &rarr;
+                            </a>
                         </div>
                     </div>
                 `;
