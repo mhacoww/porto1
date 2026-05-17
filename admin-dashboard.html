@@ -52,7 +52,18 @@
     </div>
 
     <div class="card">
-        <h3>Published Articles</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">Published Articles</h3>
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="adminSearch" placeholder="Search titles..." oninput="filterEntries()" style="margin: 0; padding: 8px; width: 250px;">
+                
+                <select id="adminFilterCategory" onchange="filterEntries()" style="margin: 0; padding: 8px; width: 180px;">
+                    <option value="">All Categories</option>
+                    </select>
+            </div>
+        </div>
+
         <table>
             <thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead>
             <tbody id="entriesBody"></tbody>
@@ -111,16 +122,21 @@
             const { data, error } = await _supabase.from('categories').select('*').order('name');
             if (error) return console.error(error);
 
-            // Update Dropdown in Article Form
+            // The dropdown for writing a NEW article
             const select = document.getElementById('category');
             select.innerHTML = '<option value="">Select a Category...</option>';
             
-            // Update Category Table
+            // NEW: The dropdown for FILTERING the table
+            const filterSelect = document.getElementById('adminFilterCategory');
+            filterSelect.innerHTML = '<option value="">All Categories</option>';
+            
+            // The category manager table
             const tbody = document.getElementById('categoriesBody');
             tbody.innerHTML = '';
 
             data.forEach(cat => {
                 select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
+                filterSelect.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
                 tbody.innerHTML += `<tr><td>${cat.name}</td><td><button class="btn-delete" onclick="deleteCategory(${cat.id})">Delete</button></td></tr>`;
             });
         }
@@ -143,27 +159,55 @@
         }
 
         // --- ARTICLE LOGIC ---
+        // 1. Fetch data from Supabase and save to memory
         async function loadEntries() {
             const { data, error } = await _supabase.from('entries').select('*').order('created_at', { ascending: false });
+            
+            if (data) {
+                allEntries = data; // Save to our memory array
+                filterEntries();   // Run the filter (which defaults to showing everything)
+            }
+        }
+
+        // 2. NEW: Filter the memory array based on inputs
+        function filterEntries() {
+            const searchQuery = document.getElementById('adminSearch').value.toLowerCase();
+            const selectedCategory = document.getElementById('adminFilterCategory').value;
+
+            const filteredData = allEntries.filter(item => {
+                // Check if title matches search text
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery);
+                // Check if category matches (or if no category is selected)
+                const matchesCategory = selectedCategory === "" || item.category === selectedCategory;
+                
+                return matchesSearch && matchesCategory; // Must pass both tests
+            });
+
+            renderTable(filteredData);
+        }
+
+        // 3. NEW: Draw the table based on the filtered data
+        function renderTable(data) {
             const tbody = document.getElementById('entriesBody');
             tbody.innerHTML = '';
             
-            if (data) {
-                allEntries = data; // SAVE to memory array
-                
-                data.forEach(item => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${item.title}</td>
-                            <td>${item.category}</td>
-                            <td>
-                                <button class="btn-edit" onclick="startEdit(${item.id})">Edit</button>
-                                <button class="btn-delete" onclick="deleteEntry(${item.id})">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No articles found.</td></tr>';
+                return;
             }
+
+            data.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.title}</td>
+                        <td>${item.category}</td>
+                        <td>
+                            <button class="btn-edit" onclick="startEdit(${item.id})">Edit</button>
+                            <button class="btn-delete" onclick="deleteEntry(${item.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
         // Handle the Form Submit (Create OR Update)
