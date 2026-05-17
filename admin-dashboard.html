@@ -147,16 +147,17 @@
             const { data, error } = await _supabase.from('entries').select('*').order('created_at', { ascending: false });
             const tbody = document.getElementById('entriesBody');
             tbody.innerHTML = '';
+            
             if (data) {
+                allEntries = data; // SAVE to memory array
+                
                 data.forEach(item => {
-                    // Convert object to string to pass into the edit function safely
-                    const itemData = encodeURIComponent(JSON.stringify(item));
                     tbody.innerHTML += `
                         <tr>
                             <td>${item.title}</td>
                             <td>${item.category}</td>
                             <td>
-                                <button class="btn-edit" onclick="startEdit('${itemData}')">Edit</button>
+                                <button class="btn-edit" onclick="startEdit(${item.id})">Edit</button>
                                 <button class="btn-delete" onclick="deleteEntry(${item.id})">Delete</button>
                             </td>
                         </tr>
@@ -194,14 +195,21 @@
         });
 
         // Setup the Edit State
-        function startEdit(itemString) {
-            const item = JSON.parse(decodeURIComponent(itemString));
+        // Setup the Edit State (Now uses the ID to look up data)
+        function startEdit(id) {
+            // Find the correct item in our memory array
+            const item = allEntries.find(e => e.id === id);
+            
+            if (!item) return; // Failsafe
+            
             editingId = item.id;
             
             document.getElementById('title').value = item.title;
             document.getElementById('category').value = item.category;
-            quill.root.innerHTML = item.description;
             document.getElementById('imageUrl').value = item.image_url || '';
+            
+            // Assuming you added the Quill Editor from earlier!
+            quill.root.innerHTML = item.description; 
             
             document.getElementById('formTitle').innerText = "Edit Article";
             document.getElementById('submitBtn').innerText = "Update Article";
