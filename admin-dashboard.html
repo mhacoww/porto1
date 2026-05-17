@@ -68,6 +68,12 @@
             <thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead>
             <tbody id="entriesBody"></tbody>
         </table>
+        
+        <div id="paginationControls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 10px; background: #f8f9fa; border: 1px solid #eee; border-radius: 4px;">
+            <button id="prevPageBtn" onclick="changePage(-1)" style="padding: 5px 15px; font-size: 0.9rem;">&larr; Previous</button>
+            <span id="pageInfo" style="font-weight: bold; color: #555;">Page 1 of 1</span>
+            <button id="nextPageBtn" onclick="changePage(1)" style="padding: 5px 15px; font-size: 0.9rem;">Next &rarr;</button>
+        </div>
     </div>
 
     <div class="card">
@@ -89,8 +95,15 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // State Variable for Editing
+        // State Variables
         let editingId = null;
-        let allEntries = []; // NEW: Memory array to hold our data safely
+        let allEntries = []; 
+        
+        // NEW: Pagination State
+        let currentFilteredData = []; // Holds the active search results
+        let currentPage = 1;
+        const itemsPerPage = 10;      // Change this number if you want more/less rows per page
+
         // Initialize the Quill Editor
         const quill = new Quill('#editor-container', {
             theme: 'snow',
@@ -170,33 +183,47 @@
         }
 
         // 2. NEW: Filter the memory array based on inputs
+        // 1. UPDATED: Filter data and reset to page 1
         function filterEntries() {
             const searchQuery = document.getElementById('adminSearch').value.toLowerCase();
             const selectedCategory = document.getElementById('adminFilterCategory').value;
 
-            const filteredData = allEntries.filter(item => {
-                // Check if title matches search text
+            // Save the filtered results to our new state variable
+            currentFilteredData = allEntries.filter(item => {
                 const matchesSearch = item.title.toLowerCase().includes(searchQuery);
-                // Check if category matches (or if no category is selected)
                 const matchesCategory = selectedCategory === "" || item.category === selectedCategory;
-                
-                return matchesSearch && matchesCategory; // Must pass both tests
+                return matchesSearch && matchesCategory;
             });
 
-            renderTable(filteredData);
+            currentPage = 1; // Anytime we search, jump back to page 1!
+            renderTable();
         }
 
-        // 3. NEW: Draw the table based on the filtered data
-        function renderTable(data) {
+        // 2. UPDATED: Slice the array and draw the table
+        function renderTable() {
             const tbody = document.getElementById('entriesBody');
+            const paginationBlock = document.getElementById('paginationControls');
             tbody.innerHTML = '';
             
-            if (data.length === 0) {
+            // Failsafe: if no articles found
+            if (currentFilteredData.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No articles found.</td></tr>';
+                paginationBlock.style.display = 'none'; // Hide pagination
                 return;
             }
 
-            data.forEach(item => {
+            paginationBlock.style.display = 'flex'; // Show pagination
+
+            // Math to figure out how to slice the array
+            const totalPages = Math.ceil(currentFilteredData.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            
+            // Slice the data!
+            const paginatedData = currentFilteredData.slice(startIndex, endIndex);
+
+            // Draw only the sliced data
+            paginatedData.forEach(item => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${item.title}</td>
@@ -208,6 +235,26 @@
                     </tr>
                 `;
             });
+
+            // Update UI text and disable buttons if we are at the beginning or end
+            document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+            
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            prevBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+            
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            nextBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+        }
+
+        // 3. NEW: Handle button clicks
+        function changePage(direction) {
+            currentPage += direction;
+            renderTable();
         }
 
         // Handle the Form Submit (Create OR Update)
