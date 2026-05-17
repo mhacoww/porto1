@@ -49,6 +49,12 @@
         <div id="news-container" class="news-grid">
             <p style="padding: 20px;">Memuat berita terbaru...</p>
         </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button id="loadMoreBtn" onclick="fetchNews(true)" style="padding: 10px 25px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; display: none;">
+                Muat Lebih Banyak
+            </button>
+        </div>
     </section>
 
     <section class="about-us" id="about-us">
@@ -79,28 +85,52 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // 2. Fetch and Display News
-        async function fetchNews() {
-            const { data, error } = await _supabase
-                .from('entries')
-                .select('*')
-                .order('created_at', { ascending: false });
+        // --- NEW: Pagination State Variables ---
+        let currentOffset = 0;
+        const limit = 6; // Number of articles to load at a time
 
+        // 2. Fetch and Display News (Upgraded with Pagination)
+        async function fetchNews(isLoadMore = false) {
             const container = document.getElementById('news-container');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
             
+            // If it's the first load, reset everything
+            if (!isLoadMore) {
+                currentOffset = 0;
+                container.innerHTML = "<p style='padding: 20px;'>Memuat berita terbaru...</p>";
+            } else {
+                // Give visual feedback while loading
+                loadMoreBtn.innerText = "Memuat...";
+                loadMoreBtn.style.opacity = "0.7";
+                loadMoreBtn.disabled = true;
+            }
+
+            // Fetch data with a specific range, and ask Supabase for the total count
+            const { data, error, count } = await _supabase
+                .from('entries')
+                .select('*', { count: 'exact' }) // 'exact' returns the total number of rows
+                .order('created_at', { ascending: false })
+                .range(currentOffset, currentOffset + limit - 1);
+
             if (error) {
-                container.innerHTML = "<p>Gagal memuat berita.</p>";
+                if (!isLoadMore) container.innerHTML = "<p>Gagal memuat berita.</p>";
+                console.error(error);
                 return;
             }
 
-            if (data.length === 0) {
-                container.innerHTML = "<p>Belum ada berita untuk saat ini.</p>";
+            // Clear the "Loading..." text on first load
+            if (!isLoadMore) {
+                container.innerHTML = '';
+            }
+
+            if (data.length === 0 && !isLoadMore) {
+                container.innerHTML = "<p style='padding: 20px;'>Belum ada berita untuk saat ini.</p>";
+                loadMoreBtn.style.display = 'none';
                 return;
             }
 
-            container.innerHTML = ''; // Clear loading text
-
+            // Inject the new cards
             data.forEach(item => {
-                // Optional: We can cut the description short so the cards stay the same height on the homepage
                 const shortDescription = item.description.length > 100 
                     ? item.description.substring(0, 100) + "..." 
                     : item.description;
@@ -110,15 +140,12 @@
                         <img src="${item.image_url || 'images/default-news.jpg'}" alt="${item.title}">
                         <div class="news-content">
                             <span class="news-category">${item.category || 'General'}</span>
-                            
                             <h3 class="news-title">
                                 <a href="article.html?id=${item.id}" style="text-decoration: none; color: inherit;">
                                     ${item.title}
                                 </a>
                             </h3>
-                            
                             <p>${shortDescription}</p>
-                            
                             <a href="article.html?id=${item.id}" style="display: inline-block; margin-top: 15px; color: #333; text-decoration: none; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 2px;">
                                 Baca Selengkapnya &rarr;
                             </a>
@@ -127,6 +154,20 @@
                 `;
                 container.innerHTML += card;
             });
+
+            // Update our tracker
+            currentOffset += limit;
+
+            // Logic to show or hide the "Load More" button
+            if (currentOffset < count) {
+                loadMoreBtn.style.display = "inline-block";
+                loadMoreBtn.innerText = "Muat Lebih Banyak";
+                loadMoreBtn.style.opacity = "1";
+                loadMoreBtn.disabled = false;
+            } else {
+                // We reached the end of the database
+                loadMoreBtn.style.display = "none";
+            }
         }
 
         // 3. Smart Auth Button Logic
