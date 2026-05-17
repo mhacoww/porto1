@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <style>
         body { font-family: sans-serif; margin: 2rem; background: #f4f4f4; }
         .nav { display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem 2rem; border-radius: 8px; margin-bottom: 2rem; }
@@ -39,7 +41,9 @@
                 <option value="">Loading categories...</option>
             </select>
             
-            <textarea id="description" placeholder="Article Content" rows="5" required></textarea>
+            <div style="background: white; margin-bottom: 15px;">
+            <div id="editor-container" style="height: 250px;"></div>
+            </div>
             <input type="text" id="imageUrl" placeholder="Image URL (optional)">
             
             <button type="submit" id="submitBtn">Publish Article</button>
@@ -75,6 +79,20 @@
 
         // State Variable for Editing
         let editingId = null;
+        // Initialize the Quill Editor
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            placeholder: 'Write your article content here...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                    [{ 'header': [1, 2, 3, false] }],                 // custom button values
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                    ['clean']                                         // remove formatting button
+                ]
+            }
+        });
 
         // 1. INIT: Check login, load data
         async function init() {
@@ -152,7 +170,7 @@
             const payload = {
                 title: document.getElementById('title').value,
                 category: document.getElementById('category').value,
-                description: document.getElementById('description').value,
+                description: quill.root.innerHTML,
                 image_url: document.getElementById('imageUrl').value
             };
 
@@ -181,7 +199,7 @@
             
             document.getElementById('title').value = item.title;
             document.getElementById('category').value = item.category;
-            document.getElementById('description').value = item.description;
+            quill.root.innerHTML = item.description;
             document.getElementById('imageUrl').value = item.image_url || '';
             
             document.getElementById('formTitle').innerText = "Edit Article";
@@ -197,6 +215,7 @@
             document.getElementById('formTitle').innerText = "Add New Article";
             document.getElementById('submitBtn').innerText = "Publish Article";
             document.getElementById('cancelBtn').style.display = "none";
+            quill.root.innerHTML = '';
         }
 
         async function deleteEntry(id) {
