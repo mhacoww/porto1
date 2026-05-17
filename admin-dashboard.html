@@ -3,90 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Admin Dashboard | Kopi Kuy Group</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { corporate: '#0f172a', accent: '#2563eb' }
+                }
+            }
+        }
+    </script>
+    
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <style>
-        body { font-family: sans-serif; margin: 2rem; background: #f4f4f4; }
-        .nav { display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem 2rem; border-radius: 8px; margin-bottom: 2rem; }
-        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        form input, form textarea, form select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 20px; background: #222; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-edit { background: #f0ad4e; padding: 5px 10px; font-size: 0.8rem; color: black; }
-        .btn-delete { background: #d9534f; padding: 5px 10px; font-size: 0.8rem; }
-        .btn-cancel { background: #ccc; color: black; display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-        .category-manager { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
-    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen">
 
-    <div class="nav">
-        <h2>Corporate News Dashboard</h2>
-        <div>
-            <span id="userEmail"></span>
-            <button onclick="home()">Home</button>
-            <button onclick="logout()">Logout</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3 id="formTitle">Add New Article</h3>
-        <form id="entryForm">
-            <input type="text" id="title" placeholder="Article Title" required>
-            
-            <select id="category" required>
-                <option value="">Loading categories...</option>
-            </select>
-            
-            <div style="background: white; margin-bottom: 15px;">
-            <div id="editor-container" style="height: 250px;"></div>
-            </div>
-            <input type="text" id="imageUrl" placeholder="Image URL (optional)">
-            
-            <button type="submit" id="submitBtn">Publish Article</button>
-            <button type="button" class="btn-cancel" id="cancelBtn" onclick="cancelEdit()">Cancel Edit</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <h3 style="margin: 0;">Published Articles</h3>
-            
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="adminSearch" placeholder="Search titles..." oninput="filterEntries()" style="margin: 0; padding: 8px; width: 250px;">
-                
-                <select id="adminFilterCategory" onchange="filterEntries()" style="margin: 0; padding: 8px; width: 180px;">
-                    <option value="">All Categories</option>
-                    </select>
+    <nav class="bg-corporate text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-xl tracking-tight">Kopi Kuy <span class="text-accent">Admin</span></span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="index.html" class="text-sm text-slate-300 hover:text-white transition">&larr; Lihat Situs Publik</a>
+                    <div class="flex items-center gap-4 border-l border-slate-700 pl-6">
+                        <span id="userEmail" class="text-sm font-medium text-slate-300"></span>
+                        <button onclick="logout()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Logout</button>
+                    </div>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <table>
-            <thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead>
-            <tbody id="entriesBody"></tbody>
-        </table>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div id="paginationControls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 10px; background: #f8f9fa; border: 1px solid #eee; border-radius: 4px;">
-            <button id="prevPageBtn" onclick="changePage(-1)" style="padding: 5px 15px; font-size: 0.9rem;">&larr; Previous</button>
-            <span id="pageInfo" style="font-weight: bold; color: #555;">Page 1 of 1</span>
-            <button id="nextPageBtn" onclick="changePage(1)" style="padding: 5px 15px; font-size: 0.9rem;">Next &rarr;</button>
-        </div>
-    </div>
+        <div class="lg:col-span-1 space-y-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 id="formTitle" class="text-lg font-bold text-slate-900 mb-6">Tulis Artikel Baru</h3>
+                <form id="entryForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Judul Artikel</label>
+                        <input type="text" id="title" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sektor / Kategori</label>
+                        <select id="category" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition bg-white">
+                            <option value="">Memuat kategori...</option>
+                        </select>
+                    </div>
 
-    <div class="card">
-        <h3>Manage Categories</h3>
-        <div class="category-manager">
-            <input type="text" id="newCategoryName" placeholder="New Category Name" style="width: 300px; margin: 0;">
-            <button onclick="addCategory()">Add Category</button>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">URL Gambar Cover (Opsional)</label>
+                        <input type="text" id="imageUrl" placeholder="https://..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Isi Konten</label>
+                        <div class="border border-slate-300 rounded-lg overflow-hidden bg-white">
+                            <div id="editor-container" class="h-64"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2 flex gap-3">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-accent hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold shadow-sm transition">Publikasikan</button>
+                        <button type="button" id="cancelBtn" onclick="cancelEdit()" class="hidden flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg font-semibold transition">Batal Edit</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-900 mb-4">Manajemen Kategori</h3>
+                
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="newCategoryName" placeholder="Nama kategori baru..." class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition">
+                    <button onclick="addCategory()" class="bg-corporate hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-semibold transition">Tambah</button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs uppercase text-slate-500 bg-slate-50">
+                                <th class="p-3 font-semibold">Nama Kategori</th>
+                                <th class="p-3 font-semibold text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <table>
-            <thead><tr><th>Category Name</th><th>Actions</th></tr></thead>
-            <tbody id="categoriesBody"></tbody>
-        </table>
-    </div>
+
+        <div class="lg:col-span-2 space-y-8">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Database Artikel</h3>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <input type="text" id="adminSearch" placeholder="Cari judul artikel..." oninput="filterEntries()" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition w-full sm:w-64">
+                        <select id="adminFilterCategory" onchange="filterEntries()" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition bg-white w-full sm:w-48">
+                            <option value="">Semua Kategori</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs uppercase text-slate-500 bg-slate-50">
+                                <th class="p-4 font-semibold">Judul Artikel</th>
+                                <th class="p-4 font-semibold w-40">Kategori</th>
+                                <th class="p-4 font-semibold w-32 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entriesBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+
+                <div id="paginationControls" class="flex justify-between items-center mt-6 pt-4 border-t border-slate-100">
+                    <button id="prevPageBtn" onclick="changePage(-1)" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        &larr; Sebelumnya
+                    </button>
+                    <span id="pageInfo" class="text-sm font-semibold text-slate-600">Halaman 1 dari 1</span>
+                    <button id="nextPageBtn" onclick="changePage(1)" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Selanjutnya &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
 
     <script>
         // --- YOUR CREDENTIALS HERE ---
@@ -94,56 +150,49 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_M0_lWHOn7NytFPK39sEgUQ_M1P0JnCL';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // State Variable for Editing
         // State Variables
         let editingId = null;
         let allEntries = []; 
-        
-        // NEW: Pagination State
-        let currentFilteredData = []; // Holds the active search results
+        let currentFilteredData = [];
         let currentPage = 1;
-        const itemsPerPage = 5;      // Change this number if you want more/less rows per page
+        const itemsPerPage = 5; // Configured for your dataset size
 
-        // Initialize the Quill Editor
+        // Initialize Quill Editor
         const quill = new Quill('#editor-container', {
             theme: 'snow',
-            placeholder: 'Write your article content here...',
+            placeholder: 'Mulai menulis konten di sini...',
             modules: {
                 toolbar: [
-                    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-                    [{ 'header': [1, 2, 3, false] }],                 // custom button values
+                    ['bold', 'italic', 'underline'],
+                    [{ 'header': [1, 2, 3, false] }],
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-                    ['clean']                                         // remove formatting button
+                    ['clean']
                 ]
             }
         });
 
-        // 1. INIT: Check login, load data
         async function init() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) window.location.href = "admin-login.html";
-            else {
-                document.getElementById('userEmail').innerText = user.email + " | ";
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                document.getElementById('userEmail').innerText = user.email;
                 await loadCategories(); 
                 await loadEntries();
             }
         }
 
-        // --- CATEGORY LOGIC ---
+        // --- CATEGORY LOGIC (With Cascading Updates) ---
         async function loadCategories() {
             const { data, error } = await _supabase.from('categories').select('*').order('name');
             if (error) return console.error(error);
 
-            // The dropdown for writing a NEW article
             const select = document.getElementById('category');
-            select.innerHTML = '<option value="">Select a Category...</option>';
+            select.innerHTML = '<option value="">Pilih Kategori...</option>';
             
-            // NEW: The dropdown for FILTERING the table
             const filterSelect = document.getElementById('adminFilterCategory');
-            filterSelect.innerHTML = '<option value="">All Categories</option>';
+            filterSelect.innerHTML = '<option value="">Semua Kategori</option>';
             
-            // The category manager table
             const tbody = document.getElementById('categoriesBody');
             tbody.innerHTML = '';
 
@@ -151,13 +200,13 @@
                 select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
                 filterSelect.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
                 
-                // NEW: Added the Edit button and passed both the ID and the old name
+                // Tailwind buttons for Category Table
                 tbody.innerHTML += `
-                    <tr>
-                        <td>${cat.name}</td>
-                        <td>
-                            <button class="btn-edit" onclick="editCategory(${cat.id}, '${cat.name}')">Edit</button>
-                            <button class="btn-delete" onclick="deleteCategory(${cat.id}, '${cat.name}')">Delete</button>
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 text-sm font-medium text-slate-700">${cat.name}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="editCategory(${cat.id}, '${cat.name}')" class="px-2 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded hover:bg-amber-100 transition mr-1">Edit</button>
+                            <button onclick="deleteCategory(${cat.id}, '${cat.name}')" class="px-2 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded hover:bg-red-100 transition">Hapus</button>
                         </td>
                     </tr>
                 `;
@@ -174,206 +223,155 @@
             } else alert(error.message);
         }
 
-        // UPGRADED: Delete Category with Safety Check
+        async function editCategory(id, oldName) {
+            const newName = prompt("Ubah nama kategori:", oldName);
+            if (!newName || newName.trim() === "" || newName === oldName) return;
+
+            const { error: catError } = await _supabase.from('categories').update({ name: newName.trim() }).eq('id', id);
+            if (catError) { alert("Gagal mengubah kategori: " + catError.message); return; }
+
+            const { error: entryError } = await _supabase.from('entries').update({ category: newName.trim() }).eq('category', oldName);
+            if (entryError) alert("Kategori diubah, tapi gagal memperbarui artikel: " + entryError.message);
+            else { loadCategories(); loadEntries(); }
+        }
+
         async function deleteCategory(id, categoryName) {
-            // Check if any articles are using this category
             const inUse = allEntries.some(item => item.category === categoryName);
-            
             if (inUse) {
                 alert(`Peringatan: Kategori "${categoryName}" masih digunakan oleh beberapa artikel. Ubah atau hapus artikel tersebut sebelum menghapus kategori ini.`);
-                return; // Stop the deletion
+                return; 
             }
-
             if(confirm(`Yakin ingin menghapus kategori "${categoryName}"?`)) {
                 await _supabase.from('categories').delete().eq('id', id);
                 loadCategories();
             }
         }
 
-        // NEW: Edit Category & Cascade Update
-        async function editCategory(id, oldName) {
-            // Ask the user for the new name
-            const newName = prompt("Ubah nama kategori:", oldName);
-            
-            // If they click cancel or don't change anything, stop
-            if (!newName || newName.trim() === "" || newName === oldName) return;
-
-            // 1. Update the Categories Table
-            const { error: catError } = await _supabase
-                .from('categories')
-                .update({ name: newName.trim() })
-                .eq('id', id);
-
-            if (catError) {
-                alert("Gagal mengubah kategori: " + catError.message);
-                return;
-            }
-
-            // 2. Cascade the Update to the Entries Table
-            // (Find every article with the old category name and update it)
-            const { error: entryError } = await _supabase
-                .from('entries')
-                .update({ category: newName.trim() })
-                .eq('category', oldName);
-
-            if (entryError) {
-                alert("Kategori diubah, tapi gagal memperbarui artikel: " + entryError.message);
-            } else {
-                // Success! Reload both tables to show the fresh data
-                loadCategories();
-                loadEntries(); 
-            }
-        }
-
-        // --- ARTICLE LOGIC ---
-        // 1. Fetch data from Supabase and save to memory
+        // --- ARTICLE LOGIC (With Search, Filter & Pagination) ---
         async function loadEntries() {
             const { data, error } = await _supabase.from('entries').select('*').order('created_at', { ascending: false });
-            
             if (data) {
-                allEntries = data; // Save to our memory array
-                filterEntries();   // Run the filter (which defaults to showing everything)
+                allEntries = data; 
+                filterEntries();   
             }
         }
 
-        // 2. NEW: Filter the memory array based on inputs
-        // 1. UPDATED: Filter data and reset to page 1
         function filterEntries() {
             const searchQuery = document.getElementById('adminSearch').value.toLowerCase();
             const selectedCategory = document.getElementById('adminFilterCategory').value;
 
-            // Save the filtered results to our new state variable
             currentFilteredData = allEntries.filter(item => {
                 const matchesSearch = item.title.toLowerCase().includes(searchQuery);
                 const matchesCategory = selectedCategory === "" || item.category === selectedCategory;
                 return matchesSearch && matchesCategory;
             });
 
-            currentPage = 1; // Anytime we search, jump back to page 1!
+            currentPage = 1; 
             renderTable();
         }
 
-        // 2. UPDATED: Slice the array and draw the table
         function renderTable() {
             const tbody = document.getElementById('entriesBody');
             const paginationBlock = document.getElementById('paginationControls');
             tbody.innerHTML = '';
             
-            // Failsafe: if no articles found
             if (currentFilteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">No articles found.</td></tr>';
-                paginationBlock.style.display = 'none'; // Hide pagination
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-8 text-slate-500">Tidak ada artikel yang ditemukan.</td></tr>';
+                paginationBlock.style.display = 'none';
                 return;
             }
 
-            paginationBlock.style.display = 'flex'; // Show pagination
+            paginationBlock.style.display = 'flex';
 
-            // Math to figure out how to slice the array
             const totalPages = Math.ceil(currentFilteredData.length / itemsPerPage);
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
-            
-            // Slice the data!
             const paginatedData = currentFilteredData.slice(startIndex, endIndex);
 
-            // Draw only the sliced data
             paginatedData.forEach(item => {
+                // Tailwind styling injected into the table rows
                 tbody.innerHTML += `
-                    <tr>
-                        <td>${item.title}</td>
-                        <td>${item.category}</td>
-                        <td>
-                            <button class="btn-edit" onclick="startEdit(${item.id})">Edit</button>
-                            <button class="btn-delete" onclick="deleteEntry(${item.id})">Delete</button>
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="p-4 text-sm font-semibold text-slate-800 truncate max-w-[200px]">${item.title}</td>
+                        <td class="p-4 text-sm text-slate-600"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-medium">${item.category}</span></td>
+                        <td class="p-4 text-right">
+                            <button onclick="startEdit(${item.id})" class="px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold rounded-md transition mr-2">Edit</button>
+                            <button onclick="deleteEntry(${item.id})" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-md transition">Hapus</button>
                         </td>
                     </tr>
                 `;
             });
 
-            // Update UI text and disable buttons if we are at the beginning or end
-            document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('pageInfo').innerText = `Halaman ${currentPage} dari ${totalPages}`;
             
             const prevBtn = document.getElementById('prevPageBtn');
             const nextBtn = document.getElementById('nextPageBtn');
             
             prevBtn.disabled = currentPage === 1;
-            prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
-            prevBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
-            
             nextBtn.disabled = currentPage === totalPages;
-            nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
-            nextBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
         }
 
-        // 3. NEW: Handle button clicks
         function changePage(direction) {
             currentPage += direction;
             renderTable();
         }
 
-        // Handle the Form Submit (Create OR Update)
+        // --- FORM HANDLING ---
         document.getElementById('entryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
                 title: document.getElementById('title').value,
                 category: document.getElementById('category').value,
-                description: quill.root.innerHTML,
+                description: quill.root.innerHTML, 
                 image_url: document.getElementById('imageUrl').value
             };
 
             let error;
             if (editingId) {
-                // UPDATE EXISTING
                 const res = await _supabase.from('entries').update(payload).eq('id', editingId);
                 error = res.error;
             } else {
-                // INSERT NEW
                 const res = await _supabase.from('entries').insert([payload]);
                 error = res.error;
             }
 
             if (error) alert("Error: " + error.message);
             else {
-                cancelEdit(); // Resets the form
-                loadEntries(); // Refreshes the table
+                cancelEdit(); 
+                loadEntries(); 
             }
         });
 
-        // Setup the Edit State
-        // Setup the Edit State (Now uses the ID to look up data)
         function startEdit(id) {
-            // Find the correct item in our memory array
             const item = allEntries.find(e => e.id === id);
-            
-            if (!item) return; // Failsafe
+            if (!item) return;
             
             editingId = item.id;
             
             document.getElementById('title').value = item.title;
             document.getElementById('category').value = item.category;
             document.getElementById('imageUrl').value = item.image_url || '';
-            
-            // Assuming you added the Quill Editor from earlier!
             quill.root.innerHTML = item.description; 
             
-            document.getElementById('formTitle').innerText = "Edit Article";
-            document.getElementById('submitBtn').innerText = "Update Article";
-            document.getElementById('cancelBtn').style.display = "inline-block";
-            window.scrollTo(0, 0); // Scroll to top so they see the form
+            document.getElementById('formTitle').innerText = "Edit Artikel";
+            document.getElementById('submitBtn').innerText = "Update Artikel";
+            document.getElementById('cancelBtn').style.display = "block";
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Cancel Edit State
         function cancelEdit() {
             editingId = null;
             document.getElementById('entryForm').reset();
-            document.getElementById('formTitle').innerText = "Add New Article";
-            document.getElementById('submitBtn').innerText = "Publish Article";
+            quill.root.innerHTML = ''; 
+            
+            document.getElementById('formTitle').innerText = "Tulis Artikel Baru";
+            document.getElementById('submitBtn').innerText = "Publikasikan";
             document.getElementById('cancelBtn').style.display = "none";
-            quill.root.innerHTML = '';
         }
 
         async function deleteEntry(id) {
-            if (confirm("Delete this article?")) {
+            if (confirm("Yakin ingin menghapus artikel ini?")) {
                 await _supabase.from('entries').delete().eq('id', id);
                 loadEntries();
             }
@@ -384,20 +382,21 @@
             window.location.href = "login.html";
         }
 
-        async function home() {
-            window.location.href = "index.html";
-        }
-
-        // NEW: Listen for "Enter" key on the admin search input
-        document.getElementById('adminSearch').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                filterEntries();
+        // --- INIT & EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            
+            // Listen for "Enter" key on the admin search input
+            const adminSearchInput = document.getElementById('adminSearch');
+            if(adminSearchInput) {
+                adminSearchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        filterEntries();
+                    }
+                });
             }
         });
-
-        // Run on load
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
