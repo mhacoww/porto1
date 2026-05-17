@@ -79,6 +79,7 @@
 
         // State Variable for Editing
         let editingId = null;
+        let allEntries = []; // NEW: Memory array to hold our data safely
         // Initialize the Quill Editor
         const quill = new Quill('#editor-container', {
             theme: 'snow',
