@@ -70,6 +70,13 @@
                 messageBox.innerText = "A system error occurred. Check the console.";
             }
         }
+        // Listen for "Enter" key on the password input
+        document.getElementById('passwordInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Stops the page from refreshing
+                login(); // Assuming your login function is named login()
+            }
+        });
     </script>
 </body>
 </html>
