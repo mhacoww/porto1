@@ -144,6 +144,8 @@
 
     </main>
 
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    
     <script>
         // --- YOUR CREDENTIALS HERE ---
         const SUPABASE_URL = 'https://vukiwkaowsvlxsbmisjr.supabase.co';
@@ -156,6 +158,8 @@
         let currentFilteredData = [];
         let currentPage = 1;
         const itemsPerPage = 5; // Configured for your dataset size
+
+        
 
         // Initialize Quill Editor
         const quill = new Quill('#editor-container', {
@@ -170,6 +174,37 @@
                 ]
             }
         });
+
+        // --- TOAST NOTIFICATION SYSTEM ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            // Set colors based on success or error
+            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
+            const icon = type === 'success' ? '✓' : '✕';
+
+            // Tailwind styling with smooth slide-up animation
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-lg shadow-xl transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-3 font-medium text-sm`;
+            
+            toast.innerHTML = `
+                <span class="flex items-center justify-center w-5 h-5 rounded-full bg-white bg-opacity-20 font-bold">${icon}</span>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger the animation slightly after adding it to the DOM
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            // Fade out and remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300); // Wait for animation to finish before deleting
+            }, 3000);
+        }
 
         async function init() {
             const { data: { user } } = await _supabase.auth.getUser();
@@ -217,10 +252,13 @@
             const name = document.getElementById('newCategoryName').value;
             if (!name) return;
             const { error } = await _supabase.from('categories').insert([{ name }]);
-            if (!error) {
+            if (error) {
+                showToast("Gagal menambah kategori.", 'error');
+            } else {
+                showToast("Kategori baru ditambahkan!", 'success');
                 document.getElementById('newCategoryName').value = '';
                 loadCategories();
-            } else alert(error.message);
+            }
         }
 
         async function editCategory(id, oldName) {
@@ -335,8 +373,10 @@
                 error = res.error;
             }
 
-            if (error) alert("Error: " + error.message);
-            else {
+            if (error) {
+                showToast("Gagal menyimpan artikel: " + error.message, 'error');
+            } else {
+                showToast(editingId ? "Artikel berhasil diperbarui!" : "Artikel baru berhasil dipublikasikan!", 'success');
                 cancelEdit(); 
                 loadEntries(); 
             }
@@ -372,8 +412,13 @@
 
         async function deleteEntry(id) {
             if (confirm("Yakin ingin menghapus artikel ini?")) {
-                await _supabase.from('entries').delete().eq('id', id);
-                loadEntries();
+                const { error } = await _supabase.from('entries').delete().eq('id', id);
+                if (error) {
+                    showToast("Gagal menghapus artikel.", 'error');
+                } else {
+                    showToast("Artikel berhasil dihapus.", 'success');
+                    loadEntries();
+                }
             }
         }
 
