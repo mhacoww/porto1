@@ -334,6 +334,14 @@
             window.location.href = "index.html";
         }
 
+        // NEW: Listen for "Enter" key on the admin search input
+        document.getElementById('adminSearch').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                filterEntries();
+            }
+        });
+
         // Run on load
         document.addEventListener('DOMContentLoaded', init);
     </script>
