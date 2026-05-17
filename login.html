@@ -20,7 +20,7 @@
         <h2>Admin Panel</h2>
         <input type="email" id="emailInput" placeholder="Admin Email">
         <input type="password" id="passwordInput" placeholder="Password">
-        <button onclick="login()">Sign In</button>
+        <button id="loginBtn" onclick="login()">Sign In</button>
         <p id="message"></p>
     </div>
 
@@ -71,12 +71,7 @@
             }
         }
         // Listen for "Enter" key on the password input
-        document.getElementById('passwordInput').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Stops the page from refreshing
-                login(); // Assuming your login function is named login()
-            }
-        });
+        document.getElementById('loginBtn').click();
     </script>
 </body>
 </html>
