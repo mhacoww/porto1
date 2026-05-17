@@ -18,6 +18,15 @@
         .news-content { padding: 15px; }
         .news-category { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; }
         .news-title { margin: 10px 0; font-size: 1.2rem; }
+        /* Filter UI Styles */
+        .filter-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin: 20px; }
+        .search-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-row input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .search-row button { padding: 10px 20px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .category-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+        .cat-btn { padding: 5px 15px; border: 1px solid #ccc; background: white; color: #555; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .cat-btn:hover { border-color: #333; color: #333; }
+        .cat-btn.active { background: #333; color: white; border-color: #333; }
     </style>
 </head>
 
@@ -45,6 +54,14 @@
 
     <!-- Dynamic News Section -->
     <section id="latest-news">
+        <div class="filter-container">
+            <div class="search-row">
+                <input type="text" id="searchInput" placeholder="Cari berita atau pengumuman...">
+                <button onclick="applySearch()">Cari</button>
+            </div>
+            <div class="category-tags" id="categoryButtons">
+                </div>
+        </div>
         <h2 style="padding-left: 20px;">Berita Terkini</h2>
         <div id="news-container" class="news-grid">
             <p style="padding: 20px;">Memuat berita terbaru...</p>
@@ -86,31 +103,81 @@
 
         // 2. Fetch and Display News
         // --- NEW: Pagination State Variables ---
+        // --- State Variables ---
         let currentOffset = 0;
-        const limit = 6; // Number of articles to load at a time
+        const limit = 6; 
+        let activeCategory = ''; // Tracks clicked category
+        let searchQuery = '';    // Tracks typed search
 
-        // 2. Fetch and Display News (Upgraded with Pagination)
+        // 1. NEW: Load Categories for the Filter Bar
+        async function loadFilterCategories() {
+            const { data, error } = await _supabase.from('categories').select('*').order('name');
+            const container = document.getElementById('categoryButtons');
+            
+            // Start with the "All" button
+            container.innerHTML = `<button onclick="setCategory('')" class="cat-btn active" id="btn-all">Semua</button>`;
+            
+            if (data) {
+                data.forEach(cat => {
+                    // Create a safe ID for the button to manage active states
+                    const safeId = 'btn-' + cat.name.replace(/\s+/g, '-').toLowerCase();
+                    container.innerHTML += `<button onclick="setCategory('${cat.name}')" class="cat-btn" id="${safeId}">${cat.name}</button>`;
+                });
+            }
+        }
+
+        // 2. NEW: Handle Category Clicks
+        function setCategory(categoryName) {
+            activeCategory = categoryName;
+            
+            // Visual update: remove 'active' class from all, add to clicked
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            if (categoryName === '') {
+                document.getElementById('btn-all').classList.add('active');
+            } else {
+                const safeId = 'btn-' + categoryName.replace(/\s+/g, '-').toLowerCase();
+                document.getElementById(safeId)?.classList.add('active');
+            }
+            
+            fetchNews(); // Reload news from page 1
+        }
+
+        // 3. NEW: Handle Search Button
+        function applySearch() {
+            searchQuery = document.getElementById('searchInput').value.trim();
+            fetchNews(); // Reload news from page 1
+        }
+
+        // 4. UPGRADED: Fetch News with Filters
         async function fetchNews(isLoadMore = false) {
             const container = document.getElementById('news-container');
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             
-            // If it's the first load, reset everything
             if (!isLoadMore) {
                 currentOffset = 0;
-                container.innerHTML = "<p style='padding: 20px;'>Memuat berita terbaru...</p>";
+                container.innerHTML = "<p style='padding: 20px;'>Memuat berita...</p>";
             } else {
-                // Give visual feedback while loading
                 loadMoreBtn.innerText = "Memuat...";
-                loadMoreBtn.style.opacity = "0.7";
                 loadMoreBtn.disabled = true;
             }
 
-            // Fetch data with a specific range, and ask Supabase for the total count
-            const { data, error, count } = await _supabase
+            // A. Build the base query
+            let query = _supabase
                 .from('entries')
-                .select('*', { count: 'exact' }) // 'exact' returns the total number of rows
+                .select('*', { count: 'exact' })
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + limit - 1);
+
+            // B. Apply conditional filters before sending!
+            if (activeCategory !== '') {
+                query = query.eq('category', activeCategory); // Exact match for category
+            }
+            if (searchQuery !== '') {
+                query = query.ilike('title', `%${searchQuery}%`); // Case-insensitive text search
+            }
+
+            // C. Execute the query
+            const { data, error, count } = await query;
 
             if (error) {
                 if (!isLoadMore) container.innerHTML = "<p>Gagal memuat berita.</p>";
@@ -118,22 +185,24 @@
                 return;
             }
 
-            // Clear the "Loading..." text on first load
-            if (!isLoadMore) {
-                container.innerHTML = '';
-            }
+            if (!isLoadMore) container.innerHTML = '';
 
             if (data.length === 0 && !isLoadMore) {
-                container.innerHTML = "<p style='padding: 20px;'>Belum ada berita untuk saat ini.</p>";
+                container.innerHTML = "<p style='padding: 20px;'>Tidak ada berita yang sesuai dengan pencarian Anda.</p>";
                 loadMoreBtn.style.display = 'none';
                 return;
             }
 
-            // Inject the new cards
+            // D. Inject the cards
             data.forEach(item => {
-                const shortDescription = item.description.length > 100 
-                    ? item.description.substring(0, 100) + "..." 
-                    : item.description;
+                // Strip HTML tags from Quill editor for the short description preview
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = item.description;
+                const plainText = tempDiv.textContent || tempDiv.innerText || "";
+                
+                const shortDescription = plainText.length > 100 
+                    ? plainText.substring(0, 100) + "..." 
+                    : plainText;
 
                 const card = `
                     <div class="news-card">
@@ -155,17 +224,13 @@
                 container.innerHTML += card;
             });
 
-            // Update our tracker
             currentOffset += limit;
 
-            // Logic to show or hide the "Load More" button
             if (currentOffset < count) {
                 loadMoreBtn.style.display = "inline-block";
                 loadMoreBtn.innerText = "Muat Lebih Banyak";
-                loadMoreBtn.style.opacity = "1";
                 loadMoreBtn.disabled = false;
             } else {
-                // We reached the end of the database
                 loadMoreBtn.style.display = "none";
             }
         }
@@ -184,6 +249,7 @@
 
         // Start everything when the page loads
         document.addEventListener('DOMContentLoaded', () => {
+            loadFilterCategories(); // Initialize the buttons
             fetchNews();
             checkLogin();
         });
