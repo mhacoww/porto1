@@ -1,222 +1,210 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
-    <title>Wara News</title>
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Load Supabase library -->
+    <title>Kopi Kuy Group | Investor & Media Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { corporate: '#0f172a', accent: '#2563eb' }
+                }
+            }
+        }
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* Small layout adjustments for the news cards */
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-        .news-card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
-        .news-card img { width: 100%; height: 200px; object-fit: cover; background: #eee; }
-        .news-content { padding: 15px; }
-        .news-category { font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; }
-        .news-title { margin: 10px 0; font-size: 1.2rem; }
-        /* Filter UI Styles */
-        .filter-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin: 20px; }
-        .search-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .search-row input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
-        .search-row button { padding: 10px 20px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .category-tags { display: flex; gap: 10px; flex-wrap: wrap; }
-        .cat-btn { padding: 5px 15px; border: 1px solid #ccc; background: white; color: #555; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-        .cat-btn:hover { border-color: #333; color: #333; }
-        .cat-btn.active { background: #333; color: white; border-color: #333; }
-    </style>
 </head>
 
-<body>
-    <nav>
-        <img class="logo" src="images/logo/logo_kuy.png">
-        <div class="navigasi">
-            <a href="#latest-news">Berita Terbaru</a>
-            <a href="#about-us">Tentang Kami</a>
-            <a href="#contact-us">Kontak</a>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
+
+    <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-xl tracking-tight text-corporate">Kopi Kuy <span class="text-accent">Group</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#" class="text-slate-600 hover:text-accent font-medium transition">Berita Utama</a>
+                    <a href="#about-us" class="text-slate-600 hover:text-accent font-medium transition">Tentang Kami</a>
+                    <a href="#contact-us" class="text-slate-600 hover:text-accent font-medium transition">Kontak</a>
+                </div>
+                <div>
+                    <a href="admin-login.html" id="authButton" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-sm">
+                        Portal Admin
+                    </a>
+                </div>
+            </div>
         </div>
-        <!-- Smart Auth Button -->
-        <a href="login.html" id="authButton" style="padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 4px;">Admin Login</a>
     </nav>
 
-    <header>
-        <div class="kiri">
-            <h1>Wara News <img src="images/icon/icon_kopi.svg" alt=""></h1>
-            <p>Pusat informasi dan perkembangan terbaru seputar ekosistem bisnis dan teknologi kami.</p>
-        </div>
-        <div class="kanan">
-            <img src="images/header/header1.png" alt="">
+    <header class="bg-corporate text-white py-20 border-b-4 border-accent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+            <div class="md:w-1/2 space-y-6">
+                <h1 class="text-4xl md:text-5xl font-bold leading-tight">
+                    Pusat Informasi Ekosistem Bisnis
+                </h1>
+                <p class="text-lg text-slate-300 max-w-xl">
+                    Transparansi operasional dan perkembangan terbaru dari sektor Agrikultur, Akuakultur, hingga Infrastruktur IT kami.
+                </p>
+            </div>
         </div>
     </header>
 
-    <!-- Dynamic News Section -->
-    <section id="latest-news">
-        <div class="filter-container">
-            <div class="search-row">
-                <input type="text" id="searchInput" placeholder="Cari berita atau pengumuman...">
-                <button onclick="applySearch()">Cari</button>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-10">
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <input type="text" id="searchInput" placeholder="Cari laporan atau pembaruan..." 
+                       class="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition">
+                <button onclick="applySearch()" class="bg-accent hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-sm transition">
+                    Cari Data
+                </button>
             </div>
-            <div class="category-tags" id="categoryButtons">
+            
+            <div class="flex flex-wrap gap-2" id="categoryButtons">
                 </div>
         </div>
-        <h2 style="padding-left: 20px;">Berita Terkini</h2>
-        <div id="news-container" class="news-grid">
-            <p style="padding: 20px;">Memuat berita terbaru...</p>
+
+        <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <p class="text-slate-500 animate-pulse col-span-full text-center py-10">Menghubungkan ke database...</p>
         </div>
-        
-        <div style="text-align: center; margin: 30px 0;">
-            <button id="loadMoreBtn" onclick="fetchNews(true)" style="padding: 10px 25px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; display: none;">
+
+        <div class="text-center mt-12">
+            <button id="loadMoreBtn" onclick="fetchNews(true)" class="hidden bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-accent px-8 py-3 rounded-lg font-semibold shadow-sm transition">
                 Muat Lebih Banyak
             </button>
         </div>
-    </section>
 
-    <section class="about-us" id="about-us">
-        <h2>Gak News Gak Kuy!</h2>
-        <p>Portal berita ini didedikasikan untuk memberikan transparansi dan update real-time mengenai operasional perusahaan, mulai dari sektor agrikultur hingga infrastruktur IT.</p>
-        <img src="images/about-us/aset_kopi_jumbo.png" alt="">
-    </section>
+    </main>
 
-    <section class="contact-us" id="contact-us">
-        <div class="kontak">
-            <img src="images/icon/icon_mail.png" alt="">
-            <p>Email: hello@waranews.com</p>
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p>&copy; 2026 Kopi Kuy Group. All rights reserved.</p>
+            <div class="flex gap-6">
+                <span id="contact-us">Email: corporate@kopikuy.com</span>
+            </div>
         </div>
-        <div class="kontak">
-            <img src="images/icon/icon_instagram.png" alt="">
-            <p>Instagram: @wara.id</p>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 WaraNews. All rights reserved.</p>
     </footer>
 
     <script>
-        // 1. Supabase Configuration
+        // --- YOUR SUPABASE KEYS HERE ---
         const SUPABASE_URL = 'https://vukiwkaowsvlxsbmisjr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_M0_lWHOn7NytFPK39sEgUQ_M1P0JnCL';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 2. Fetch and Display News
-        // --- NEW: Pagination State Variables ---
-        // --- State Variables ---
         let currentOffset = 0;
         const limit = 6; 
-        let activeCategory = ''; // Tracks clicked category
-        let searchQuery = '';    // Tracks typed search
+        let activeCategory = ''; 
+        let searchQuery = '';    
 
-        // 1. NEW: Load Categories for the Filter Bar
+        // Load Categories
         async function loadFilterCategories() {
             const { data, error } = await _supabase.from('categories').select('*').order('name');
             const container = document.getElementById('categoryButtons');
             
-            // Start with the "All" button
-            container.innerHTML = `<button onclick="setCategory('')" class="cat-btn active" id="btn-all">Semua</button>`;
+            const baseClass = "px-4 py-2 rounded-full text-sm font-medium border transition cursor-pointer";
+            const activeClass = "bg-slate-900 text-white border-slate-900 shadow-sm";
+            const inactiveClass = "bg-white text-slate-600 border-slate-300 hover:border-slate-400 hover:bg-slate-50";
+            
+            container.innerHTML = `<button onclick="setCategory('')" class="cat-btn ${baseClass} ${activeClass}" id="btn-all">Semua Sektor</button>`;
             
             if (data) {
                 data.forEach(cat => {
-                    // Create a safe ID for the button to manage active states
                     const safeId = 'btn-' + cat.name.replace(/\s+/g, '-').toLowerCase();
-                    container.innerHTML += `<button onclick="setCategory('${cat.name}')" class="cat-btn" id="${safeId}">${cat.name}</button>`;
+                    container.innerHTML += `<button onclick="setCategory('${cat.name}')" class="cat-btn ${baseClass} ${inactiveClass}" id="${safeId}">${cat.name}</button>`;
                 });
             }
         }
 
-        // 2. NEW: Handle Category Clicks
+        // Handle Category Clicks
         function setCategory(categoryName) {
             activeCategory = categoryName;
             
-            // Visual update: remove 'active' class from all, add to clicked
-            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
-            if (categoryName === '') {
-                document.getElementById('btn-all').classList.add('active');
-            } else {
-                const safeId = 'btn-' + categoryName.replace(/\s+/g, '-').toLowerCase();
-                document.getElementById(safeId)?.classList.add('active');
+            const activeStyle = ["bg-slate-900", "text-white", "border-slate-900", "shadow-sm"];
+            const inactiveStyle = ["bg-white", "text-slate-600", "border-slate-300", "hover:border-slate-400", "hover:bg-slate-50"];
+
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove(...activeStyle);
+                btn.classList.add(...inactiveStyle);
+            });
+            
+            const targetBtn = categoryName === '' ? document.getElementById('btn-all') : document.getElementById('btn-' + categoryName.replace(/\s+/g, '-').toLowerCase());
+            
+            if (targetBtn) {
+                targetBtn.classList.remove(...inactiveStyle);
+                targetBtn.classList.add(...activeStyle);
             }
             
-            fetchNews(); // Reload news from page 1
+            fetchNews();
         }
 
-        // 3. NEW: Handle Search Button
         function applySearch() {
             searchQuery = document.getElementById('searchInput').value.trim();
-            fetchNews(); // Reload news from page 1
+            fetchNews();
         }
 
-        // 4. UPGRADED: Fetch News with Filters
+        // Fetch and Render News using Tailwind Card Styles
         async function fetchNews(isLoadMore = false) {
             const container = document.getElementById('news-container');
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             
             if (!isLoadMore) {
                 currentOffset = 0;
-                container.innerHTML = "<p style='padding: 20px;'>Memuat berita...</p>";
+                container.innerHTML = "<div class='col-span-full text-center py-10'><p class='text-slate-500 animate-pulse'>Mengambil data...</p></div>";
             } else {
                 loadMoreBtn.innerText = "Memuat...";
                 loadMoreBtn.disabled = true;
             }
 
-            // A. Build the base query
-            let query = _supabase
-                .from('entries')
-                .select('*', { count: 'exact' })
+            let query = _supabase.from('entries').select('*', { count: 'exact' })
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + limit - 1);
 
-            // B. Apply conditional filters before sending!
-            if (activeCategory !== '') {
-                query = query.eq('category', activeCategory); // Exact match for category
-            }
-            if (searchQuery !== '') {
-                query = query.ilike('title', `%${searchQuery}%`); // Case-insensitive text search
-            }
+            if (activeCategory !== '') query = query.eq('category', activeCategory);
+            if (searchQuery !== '') query = query.ilike('title', `%${searchQuery}%`);
 
-            // C. Execute the query
             const { data, error, count } = await query;
 
             if (error) {
-                if (!isLoadMore) container.innerHTML = "<p>Gagal memuat berita.</p>";
-                console.error(error);
+                if (!isLoadMore) container.innerHTML = "<p class='col-span-full text-red-500 text-center py-10'>Gagal memuat berita.</p>";
                 return;
             }
 
             if (!isLoadMore) container.innerHTML = '';
 
             if (data.length === 0 && !isLoadMore) {
-                container.innerHTML = "<p style='padding: 20px;'>Tidak ada berita yang sesuai dengan pencarian Anda.</p>";
-                loadMoreBtn.style.display = 'none';
+                container.innerHTML = "<p class='col-span-full text-slate-500 text-center py-10 bg-white rounded-xl border border-slate-200'>Tidak ada dokumen yang ditemukan.</p>";
+                loadMoreBtn.classList.add('hidden');
                 return;
             }
 
-            // D. Inject the cards
             data.forEach(item => {
-                // Strip HTML tags from Quill editor for the short description preview
                 const tempDiv = document.createElement("div");
                 tempDiv.innerHTML = item.description;
                 const plainText = tempDiv.textContent || tempDiv.innerText || "";
-                
-                const shortDescription = plainText.length > 100 
-                    ? plainText.substring(0, 100) + "..." 
-                    : plainText;
+                const shortDescription = plainText.length > 110 ? plainText.substring(0, 110) + "..." : plainText;
 
+                // NEW TAILWIND CARD HTML
                 const card = `
-                    <div class="news-card">
-                        <img src="${item.image_url || 'images/default-news.jpg'}" alt="${item.title}">
-                        <div class="news-content">
-                            <span class="news-category">${item.category || 'General'}</span>
-                            <h3 class="news-title">
-                                <a href="article.html?id=${item.id}" style="text-decoration: none; color: inherit;">
-                                    ${item.title}
-                                </a>
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md border border-slate-100 overflow-hidden flex flex-col transition duration-200">
+                        <img src="${item.image_url || 'https://via.placeholder.com/600x400?text=Kopi+Kuy+Group'}" alt="${item.title}" class="h-48 w-full object-cover bg-slate-100">
+                        <div class="p-6 flex flex-col flex-grow">
+                            <span class="text-xs font-bold tracking-wider text-accent uppercase mb-2">${item.category || 'General'}</span>
+                            <h3 class="text-xl font-bold text-slate-900 mb-3 line-clamp-2">
+                                <a href="article.html?id=${item.id}" class="hover:text-accent transition">${item.title}</a>
                             </h3>
-                            <p>${shortDescription}</p>
-                            <a href="article.html?id=${item.id}" style="display: inline-block; margin-top: 15px; color: #333; text-decoration: none; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 2px;">
-                                Baca Selengkapnya &rarr;
+                            <p class="text-slate-600 mb-6 flex-grow text-sm leading-relaxed">${shortDescription}</p>
+                            <a href="article.html?id=${item.id}" class="inline-flex items-center text-sm font-semibold text-corporate hover:text-accent group">
+                                Baca Selengkapnya 
+                                <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
                             </a>
                         </div>
                     </div>
@@ -227,29 +215,27 @@
             currentOffset += limit;
 
             if (currentOffset < count) {
-                loadMoreBtn.style.display = "inline-block";
+                loadMoreBtn.classList.remove('hidden');
                 loadMoreBtn.innerText = "Muat Lebih Banyak";
                 loadMoreBtn.disabled = false;
             } else {
-                loadMoreBtn.style.display = "none";
+                loadMoreBtn.classList.add('hidden');
             }
         }
 
-        // 3. Smart Auth Button Logic
         async function checkLogin() {
             const { data: { user } } = await _supabase.auth.getUser();
             const authBtn = document.getElementById('authButton');
-            
             if (user) {
-                authBtn.innerText = "Admin Dashboard";
+                authBtn.innerText = "Dasbor Admin";
                 authBtn.href = "admin-dashboard.html";
-                authBtn.style.background = "#28a745"; // Green for logged in
+                authBtn.classList.replace('bg-slate-900', 'bg-emerald-600');
+                authBtn.classList.replace('hover:bg-slate-800', 'hover:bg-emerald-700');
             }
         }
 
-        // Start everything when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            loadFilterCategories(); // Initialize the buttons
+            loadFilterCategories();
             fetchNews();
             checkLogin();
         });
