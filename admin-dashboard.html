@@ -150,7 +150,17 @@
             data.forEach(cat => {
                 select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
                 filterSelect.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
-                tbody.innerHTML += `<tr><td>${cat.name}</td><td><button class="btn-delete" onclick="deleteCategory(${cat.id})">Delete</button></td></tr>`;
+                
+                // NEW: Added the Edit button and passed both the ID and the old name
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${cat.name}</td>
+                        <td>
+                            <button class="btn-edit" onclick="editCategory(${cat.id}, '${cat.name}')">Edit</button>
+                            <button class="btn-delete" onclick="deleteCategory(${cat.id}, '${cat.name}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
@@ -164,10 +174,54 @@
             } else alert(error.message);
         }
 
-        async function deleteCategory(id) {
-            if(confirm("Delete this category?")) {
+        // UPGRADED: Delete Category with Safety Check
+        async function deleteCategory(id, categoryName) {
+            // Check if any articles are using this category
+            const inUse = allEntries.some(item => item.category === categoryName);
+            
+            if (inUse) {
+                alert(`Peringatan: Kategori "${categoryName}" masih digunakan oleh beberapa artikel. Ubah atau hapus artikel tersebut sebelum menghapus kategori ini.`);
+                return; // Stop the deletion
+            }
+
+            if(confirm(`Yakin ingin menghapus kategori "${categoryName}"?`)) {
                 await _supabase.from('categories').delete().eq('id', id);
                 loadCategories();
+            }
+        }
+
+        // NEW: Edit Category & Cascade Update
+        async function editCategory(id, oldName) {
+            // Ask the user for the new name
+            const newName = prompt("Ubah nama kategori:", oldName);
+            
+            // If they click cancel or don't change anything, stop
+            if (!newName || newName.trim() === "" || newName === oldName) return;
+
+            // 1. Update the Categories Table
+            const { error: catError } = await _supabase
+                .from('categories')
+                .update({ name: newName.trim() })
+                .eq('id', id);
+
+            if (catError) {
+                alert("Gagal mengubah kategori: " + catError.message);
+                return;
+            }
+
+            // 2. Cascade the Update to the Entries Table
+            // (Find every article with the old category name and update it)
+            const { error: entryError } = await _supabase
+                .from('entries')
+                .update({ category: newName.trim() })
+                .eq('category', oldName);
+
+            if (entryError) {
+                alert("Kategori diubah, tapi gagal memperbarui artikel: " + entryError.message);
+            } else {
+                // Success! Reload both tables to show the fresh data
+                loadCategories();
+                loadEntries(); 
             }
         }
 
